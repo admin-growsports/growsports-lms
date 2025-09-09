@@ -57,6 +57,543 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-black min-h-screen flex flex-col items-center text-gray-100 dark">
-<!-- Rest of the HTML content omitted for brevity -->
+
+<!-- Header -->
+<header class="bg-gray-800 shadow-lg w-full p-4 flex justify-between items-center fixed top-0 z-50 light:bg-white light:text-gray-900 light:shadow-sm">
+    <div class="flex items-center space-x-2">
+        <svg class="h-8 w-8 text-green-500 light:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.835 5.485 9.208 5 7.5 5S4.165 5.485 3 6.253v13C4.165 18.515 5.835 19 7.5 19s3.335-.485 4.5-1.247m0-13C13.165 5.485 14.835 5 16.5 5s3.335.485 4.5 1.247v13C19.835 18.515 18.165 19 16.5 19s-3.335-.485-4.5-1.247m0 0V5" />
+        </svg>
+        <h1 class="text-2xl font-bold text-white light:text-gray-800">Growsports Dashboard</h1>
+    </div>
+    <div class="flex items-center space-x-2">
+        <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-700 light:hover:bg-gray-200 transition-colors duration-200">
+            <svg id="moonIcon" class="h-6 w-6 text-gray-300 light:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <svg id="sunIcon" class="h-6 w-6 text-yellow-500 hidden light:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+        </button>
+        <span id="userIdDisplay" class="text-xs text-gray-400 font-mono hidden sm:block light:text-gray-600"></span>
+        <button id="authButton" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300 shadow-lg light:bg-blue-600 light:hover:bg-blue-700">
+            Log In
+        </button>
+        <button id="logoutButton" class="bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700 transition duration-300 shadow-lg hidden">
+            Log Out
+        </button>
+    </div>
+</header>
+
+<main id="mainContent" class="container mx-auto p-4 mt-20 sm:mt-24 hidden">
+    <!-- Message Box for Alerts and Success Messages -->
+    <div id="messageBox" class="message-box hidden fixed top-24 right-4 p-4 rounded-md shadow-lg z-50 transform-gpu translate-x-full" role="alert">
+        <p id="messageText" class="font-medium"></p>
+    </div>
+
+    <!-- Admin Navigation Tabs -->
+    <div id="adminTabs" class="flex justify-center space-x-4 mb-6 hidden">
+        <button id="myCoursesTab" class="py-2 px-4 rounded-md font-medium text-gray-400 hover:bg-gray-800 focus:bg-gray-700 transition-colors duration-200 light:text-gray-600 light:hover:bg-gray-200 light:focus:bg-gray-300">My Courses</button>
+        <button id="adminPanelTab" class="py-2 px-4 rounded-md font-medium text-gray-400 hover:bg-gray-800 focus:bg-gray-700 transition-colors duration-200 light:text-gray-600 light:hover:bg-gray-200 light:focus:bg-gray-300">Admin Panel</button>
+        <button id="mediaLibraryTab" class="py-2 px-4 rounded-md font-medium text-gray-400 hover:bg-gray-800 focus:bg-gray-700 transition-colors duration-200 light:text-gray-600 light:hover:bg-gray-200 light:focus:bg-gray-300">Media Library</button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <section id="myCoursesSection" class="bg-gray-800 rounded-lg shadow-lg p-6 w-full light:bg-white light:shadow-sm">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4 light:border-gray-200">
+            <h2 class="text-xl sm:text-2xl font-semibold text-white light:text-gray-800">My Courses</h2>
+            <div class="flex items-center">
+                <span id="courseCount" class="text-sm text-gray-500 mr-2 light:text-gray-400"></span>
+                <svg id="loadingIndicator" class="animate-spin h-6 w-6 text-green-500 hidden light:text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        </div>
+        <div id="coursesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Course cards will be rendered here -->
+        </div>
+        <div id="noCourses" class="text-center py-12 text-gray-500 hidden light:text-gray-400">
+            <p>No courses found. Check back later!</p>
+        </div>
+    </section>
+
+    <!-- Admin Panel Section -->
+    <section id="adminPanelSection" class="bg-gray-800 rounded-lg shadow-lg p-6 w-full hidden light:bg-white light:shadow-sm">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-6 border-b border-gray-700 pb-4 light:text-gray-800 light:border-gray-200">Admin Panel</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Add User Form -->
+            <div class="bg-gray-700 p-6 rounded-lg shadow-inner light:bg-gray-50">
+                <h3 class="text-lg font-bold text-white mb-4 light:text-gray-800">Add Student by Email</h3>
+                <form id="addUserForm" class="space-y-4">
+                    <div>
+                        <label for="studentEmail" class="block text-sm font-medium text-gray-300 light:text-gray-700">Student Email</label>
+                        <input type="email" id="studentEmail" name="studentEmail" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-white shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm light:border-gray-300 light:bg-white light:text-gray-900 light:focus:ring-blue-500 light:focus:border-blue-500">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300 light:bg-blue-600 light:hover:bg-blue-700">
+                            Grant Access
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- Create Course Form -->
+            <div class="bg-gray-700 p-6 rounded-lg shadow-inner light:bg-gray-50">
+                <h3 class="text-lg font-bold text-white mb-4 light:text-gray-800">Create a New Course</h3>
+                <form id="createCourseForm" class="space-y-4">
+                    <div>
+                        <label for="adminCourseTitle" class="block text-sm font-medium text-gray-300 light:text-gray-700">Course Title</label>
+                        <input type="text" id="adminCourseTitle" name="courseTitle" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-white shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm light:border-gray-300 light:bg-white light:text-gray-900 light:focus:ring-blue-500 light:focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="adminCourseDescription" class="block text-sm font-medium text-gray-300 light:text-gray-700">Course Description</label>
+                        <textarea id="adminCourseDescription" name="courseDescription" rows="4" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-white shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm light:border-gray-300 light:bg-white light:text-gray-900 light:focus:ring-blue-500 light:focus:border-blue-500"></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300 light:bg-blue-600 light:hover:bg-blue-700">
+                            Save Course
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Media Library Section -->
+    <section id="mediaLibrarySection" class="bg-gray-800 rounded-lg shadow-lg p-6 w-full hidden light:bg-white light:shadow-sm">
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-6 border-b border-gray-700 pb-4 light:text-gray-800 light:border-gray-200">Media Library</h2>
+        <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+            <input type="file" id="mediaFile" class="mb-2 sm:mb-0 block w-full sm:w-auto text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-600 file:text-white hover:file:bg-green-700 light:text-gray-700 light:file:bg-blue-600 light:file:hover:bg-blue-700">
+            <button id="uploadMediaButton" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300 light:bg-blue-600 light:hover:bg-blue-700 w-full sm:w-auto">
+                Upload File
+            </button>
+        </div>
+        <div id="mediaFilesList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Media files will be rendered here -->
+        </div>
+        <div id="noMediaFiles" class="text-center py-12 text-gray-500 hidden light:text-gray-400">
+            <p>No files uploaded yet.</p>
+        </div>
+    </section>
+</main>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <div class="flex justify-between items-center pb-3">
+            <h3 class="text-xl font-semibold text-white light:text-gray-800">Log In to Growsports</h3>
+            <span class="close-modal text-gray-500 hover:text-gray-200 text-2xl cursor-pointer font-bold light:text-gray-400 light:hover:text-gray-700">&times;</span>
+        </div>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label for="loginEmail" class="block text-sm font-medium text-gray-300 light:text-gray-700">Email</label>
+                <input type="email" id="loginEmail" name="email" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-white shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm light:border-gray-300 light:bg-white light:text-gray-900 light:focus:ring-blue-500 light:focus:border-blue-500">
+            </div>
+            <div>
+                <label for="loginPassword" class="block text-sm font-medium text-gray-300 light:text-gray-700">Password</label>
+                <input type="password" id="loginPassword" name="password" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-white shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm light:border-gray-300 light:bg-white light:text-gray-900 light:focus:ring-blue-500 light:focus:border-blue-500">
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300 light:bg-blue-600 light:hover:bg-blue-700">
+                    Log In
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, listAll, deleteObject, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Global variables for Firebase configuration
+    const appId = 'growsports-lms';
+    const firebaseConfig = {
+        apiKey: "AIzaSyAk_SOaDtFsQZPx--b0kBvCu0ZguyuApzs",
+        authDomain: "growsports-lms.firebaseapp.com",
+        projectId: "growsports-lms",
+        storageBucket: "growsports-lms.firebasestorage.app",
+        messagingSenderId: "981110350315",
+        appId: "1:981110350315:web:726d39a024635152c879ae",
+        measurementId: "G-CP6FSQ2P9B"
+    };
+
+    let db, auth, storage;
+    let user, userRole;
+
+    setLogLevel('Debug');
+
+    // Function to display messages in the UI
+    function showMessage(message, type = 'success') {
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+        messageText.textContent = message;
+        messageBox.className = `message-box fixed top-24 right-4 p-4 rounded-md shadow-lg z-50 transform-gpu`;
+
+        if (type === 'success') {
+            messageBox.classList.add('bg-green-500', 'text-white');
+        } else if (type === 'error') {
+            messageBox.classList.add('bg-red-500', 'text-white');
+        }
+
+        // Animate the message box in
+        requestAnimationFrame(() => {
+            messageBox.classList.remove('translate-x-full');
+            messageBox.classList.add('translate-x-0');
+        });
+
+        // Hide the message box after a few seconds
+        setTimeout(() => {
+            messageBox.classList.remove('translate-x-0');
+            messageBox.classList.add('translate-x-full');
+        }, 3000);
+    }
+
+    // Initialize Firebase
+    async function initializeFirebase() {
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            storage = getStorage(app);
+
+            onAuthStateChanged(auth, async (authUser) => {
+                if (authUser) {
+                    user = authUser;
+                    document.getElementById('userIdDisplay').textContent = `User ID: ${user.uid}`;
+                    document.getElementById('userIdDisplay').classList.remove('hidden');
+                    document.getElementById('authButton').classList.add('hidden');
+                    document.getElementById('logoutButton').classList.remove('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+
+                    // Check user role from Firestore
+                    const userDocRef = doc(db, `/artifacts/${appId}/users/${user.uid}`);
+                    const userDoc = await getDoc(userDocRef);
+                    userRole = userDoc.exists() ? userDoc.data().role : 'student';
+
+                    // Show admin tabs if the user is an admin
+                    if (userRole === 'admin') {
+                        document.getElementById('adminTabs').classList.remove('hidden');
+                        document.getElementById('adminPanelTab').click();
+                    } else {
+                        document.getElementById('adminTabs').classList.add('hidden');
+                        document.getElementById('myCoursesTab').click();
+                    }
+
+                    setupRealtimeListener();
+                    showMessage(`Welcome back, ${user.email}!`, 'success');
+                } else {
+                    user = null;
+                    userRole = null;
+                    document.getElementById('userIdDisplay').classList.add('hidden');
+                    document.getElementById('authButton').classList.remove('hidden');
+                    document.getElementById('logoutButton').classList.add('hidden');
+                    document.getElementById('mainContent').classList.add('hidden');
+                    document.getElementById('loginModal').style.display = 'block';
+                }
+            });
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            showMessage('Failed to connect to the database. Please try again.', 'error');
+        }
+    }
+
+    // Function to set up the real-time listener for courses
+    function setupRealtimeListener() {
+        if (!db) return;
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        loadingIndicator.classList.remove('hidden');
+
+        // Listen to the public courses collection
+        const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
+        const coursesRef = collection(db, coursesCollectionPath);
+
+        onSnapshot(coursesRef, (snapshot) => {
+            const coursesList = document.getElementById('coursesList');
+            const noCoursesMessage = document.getElementById('noCourses');
+            const courseCount = document.getElementById('courseCount');
+            coursesList.innerHTML = '';
+            loadingIndicator.classList.add('hidden');
+
+            if (snapshot.empty) {
+                noCoursesMessage.classList.remove('hidden');
+                courseCount.textContent = `0 courses`;
+            } else {
+                noCoursesMessage.classList.add('hidden');
+                courseCount.textContent = `${snapshot.size} courses`;
+                snapshot.forEach(doc => {
+                    const course = doc.data();
+                    const courseId = doc.id;
+                    const card = document.createElement('div');
+                    card.className = "bg-gray-700 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 light:bg-white";
+
+                    // Placeholder for course completion percentage
+                    const completionPercentage = "0%";
+                    const completionBar = `<div class="w-full bg-gray-600 rounded-full h-2.5 mb-2 light:bg-gray-200">
+                                             <div class="bg-green-500 h-2.5 rounded-full" style="width: ${completionPercentage}"></div>
+                                          </div>
+                                          <p class="text-xs text-gray-400 mb-4 light:text-gray-500">${completionPercentage} Complete</p>`;
+
+                    // Placeholder for lessons, quizzes, and notes
+                    const courseContent = `
+                        <div class="space-y-2 mt-4 text-sm text-gray-300 light:text-gray-700">
+                            <p><strong>Video Lectures:</strong> (Coming Soon)</p>
+                            <p><strong>Quizzes:</strong> (Coming Soon)</p>
+                            <p><strong>Notes:</strong> (Coming Soon)</p>
+                        </div>
+                    `;
+
+                    card.innerHTML = `
+                        <h3 class="text-lg font-bold text-white mb-2 light:text-gray-900">${course.title}</h3>
+                        <p class="text-gray-400 text-sm mb-4 light:text-gray-600">${course.description}</p>
+                        ${completionBar}
+                        ${courseContent}
+                        <div class="flex justify-between items-center text-xs text-gray-500 mt-4 border-t border-gray-600 pt-4 light:text-gray-400 light:border-gray-200">
+                            <span>Created by: ${course.authorId.substring(0, 8)}...</span>
+                            <span>${new Date(course.createdAt.seconds * 1000).toLocaleDateString()}</span>
+                        </div>
+                    `;
+                    coursesList.appendChild(card);
+                });
+            }
+        }, (error) => {
+            console.error("Error listening to courses:", error);
+            showMessage('Failed to load courses. Check the console for details.', 'error');
+            loadingIndicator.classList.add('hidden');
+        });
+    }
+
+    // Handle login form submission
+    async function handleLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            document.getElementById('loginModal').style.display = 'none';
+            showMessage('Login successful!', 'success');
+        } catch (error) {
+            console.error("Login error:", error);
+            showMessage('Login failed: ' + error.message, 'error');
+        }
+    }
+
+    // Handle logout
+    async function handleLogout() {
+        try {
+            await signOut(auth);
+            showMessage('You have been logged out.', 'success');
+        } catch (error) {
+            console.error("Logout error:", error);
+            showMessage('Logout failed: ' + error.message, 'error');
+        }
+    }
+    
+    // --- Media Library Functions ---
+    async function handleMediaUpload() {
+        if (userRole !== 'admin' || !user) {
+            showMessage('You must be an admin to upload media.', 'error');
+            return;
+        }
+
+        const fileInput = document.getElementById('mediaFile');
+        const file = fileInput.files[0];
+        if (!file) {
+            showMessage('Please select a file to upload.', 'error');
+            return;
+        }
+        
+        // The file path in storage: media/{user.uid}/{fileName}
+        const mediaRef = ref(storage, `media/${user.uid}/${file.name}`);
+        try {
+            await uploadBytes(mediaRef, file);
+            showMessage('File uploaded successfully!', 'success');
+            fileInput.value = ''; // Clear the input
+            fetchMediaFiles(); // Refresh the list
+        } catch (error) {
+            console.error("Upload error:", error);
+            showMessage('File upload failed: ' + error.message, 'error');
+        }
+    }
+    
+    async function fetchMediaFiles() {
+        if (!storage) return;
+
+        const mediaFilesList = document.getElementById('mediaFilesList');
+        const noMediaFilesMessage = document.getElementById('noMediaFiles');
+        mediaFilesList.innerHTML = '';
+        
+        const listRef = ref(storage, `media/${user.uid}`);
+        try {
+            const res = await listAll(listRef);
+            if (res.items.length === 0) {
+                noMediaFilesMessage.classList.remove('hidden');
+            } else {
+                noMediaFilesMessage.classList.add('hidden');
+                for (const itemRef of res.items) {
+                    const fileContainer = document.createElement('div');
+                    fileContainer.className = "bg-gray-700 p-4 rounded-md flex items-center justify-between space-x-2 light:bg-gray-200";
+                    
+                    const fileName = itemRef.name;
+                    
+                    // Check if file is a video or image to display a relevant icon
+                    const fileIcon = fileName.match(/\.(mp4|mov|avi|webm)$/i) ? 
+                        `<svg class="w-6 h-6 text-green-500 light:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.724v6.552a1 1 0 01-1.447.894L15 14M5 18H3a2 2 0 01-2-2V8a2 2 0 012-2h3.93l3.57-2.148a1 1 0 011.45.894v11.5a1 1 0 01-1.45.894L9.93 18H5z"/> </svg>` : 
+                        `<svg class="w-6 h-6 text-green-500 light:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/> </svg>`;
+
+                    fileContainer.innerHTML = `
+                        <div class="flex items-center space-x-2 truncate">
+                            ${fileIcon}
+                            <span class="truncate text-gray-300 light:text-gray-900">${fileName}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="#" class="download-link text-sm text-green-400 hover:text-green-300 light:text-blue-600 light:hover:text-blue-500" data-name="${fileName}">Download</a>
+                            <button class="delete-file-btn text-red-400 hover:text-red-300 transition-colors duration-200" data-name="${fileName}">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    mediaFilesList.appendChild(fileContainer);
+                }
+            }
+        } catch (error) {
+            console.error("Error listing files:", error);
+            showMessage('Failed to load media files.', 'error');
+        }
+    }
+    
+    async function handleDeleteFile(fileName) {
+        const fileRef = ref(storage, `media/${user.uid}/${fileName}`);
+        try {
+            await deleteObject(fileRef);
+            showMessage(`File "${fileName}" deleted successfully.`, 'success');
+            fetchMediaFiles(); // Refresh the list
+        } catch (error) {
+            console.error("Error deleting file:", error);
+            showMessage('Failed to delete file: ' + error.message, 'error');
+        }
+    }
+
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('themeToggle');
+    function toggleTheme() {
+        const body = document.body;
+        if (body.classList.contains('dark')) {
+            body.classList.remove('dark');
+            body.classList.add('light');
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.classList.remove('light');
+            body.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+    // Load theme from localStorage on page load
+    function loadTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const body = document.body;
+        if (savedTheme) {
+            body.classList.remove('dark', 'light');
+            body.classList.add(savedTheme);
+        } else {
+            // Default to dark theme if no preference is saved
+            body.classList.add('dark');
+        }
+    }
+
+    // DOMContentLoaded event listener
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTheme();
+        themeToggle.addEventListener('click', toggleTheme);
+
+        const loginModal = document.getElementById('loginModal');
+        const loginButton = document.getElementById('authButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const closeModalButton = document.querySelector('.close-modal');
+        const loginForm = document.getElementById('loginForm');
+        const myCoursesTab = document.getElementById('myCoursesTab');
+        const adminPanelTab = document.getElementById('adminPanelTab');
+        const mediaLibraryTab = document.getElementById('mediaLibraryTab');
+        const myCoursesSection = document.getElementById('myCoursesSection');
+        const adminPanelSection = document.getElementById('adminPanelSection');
+        const mediaLibrarySection = document.getElementById('mediaLibrarySection');
+        const createCourseForm = document.getElementById('createCourseForm');
+        const addUserForm = document.getElementById('addUserForm');
+        const uploadMediaButton = document.getElementById('uploadMediaButton');
+        const mediaFilesList = document.getElementById('mediaFilesList');
+
+        // Show login modal on button click
+        loginButton.addEventListener('click', () => {
+            loginModal.style.display = 'block';
+        });
+
+        // Handle tab clicks for navigation
+        myCoursesTab.addEventListener('click', () => {
+            myCoursesSection.classList.remove('hidden');
+            adminPanelSection.classList.add('hidden');
+            mediaLibrarySection.classList.add('hidden');
+        });
+        adminPanelTab.addEventListener('click', () => {
+            adminPanelSection.classList.remove('hidden');
+            myCoursesSection.classList.add('hidden');
+            mediaLibrarySection.classList.add('hidden');
+        });
+        mediaLibraryTab.addEventListener('click', () => {
+            mediaLibrarySection.classList.remove('hidden');
+            myCoursesSection.classList.add('hidden');
+            adminPanelSection.classList.add('hidden');
+            fetchMediaFiles();
+        });
+
+        // Handle modal close events
+        closeModalButton.addEventListener('click', () => {
+            loginModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === loginModal) {
+                loginModal.style.display = 'none';
+            }
+        });
+
+        // Handle media files list actions (download and delete)
+        mediaFilesList.addEventListener('click', async (event) => {
+            if (event.target.classList.contains('delete-file-btn')) {
+                const fileName = event.target.dataset.name;
+                handleDeleteFile(fileName);
+            } else if (event.target.classList.contains('download-link')) {
+                event.preventDefault(); // Prevent default link behavior
+                const fileName = event.target.dataset.name;
+                const fileRef = ref(storage, `media/${user.uid}/${fileName}`);
+                try {
+                    const url = await getDownloadURL(fileRef);
+                    window.open(url, '_blank');
+                } catch (error) {
+                    console.error("Download URL error:", error);
+                    showMessage('Failed to get download URL.', 'error');
+                }
+            }
+        });
+
+        // Attach form and button listeners
+        loginForm.addEventListener('submit', handleLogin);
+        logoutButton.addEventListener('click', handleLogout);
+        createCourseForm.addEventListener('submit', handleCreateCourse);
+        addUserForm.addEventListener('submit', handleAddUser);
+        uploadMediaButton.addEventListener('click', handleMediaUpload);
+
+        // Initialize Firebase
+        initializeFirebase();
+    });
+</script>
+
 </body>
 </html>
