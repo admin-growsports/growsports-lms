@@ -393,7 +393,64 @@
             showMessage('Logout failed: ' + error.message, 'error');
         }
     }
-    
+
+    // Handle form submission to create a new course (Admin only)
+    async function handleCreateCourse(event) {
+        event.preventDefault();
+        if (userRole !== 'admin') {
+            showMessage('You must be an admin to create courses.', 'error');
+            return;
+        }
+
+        const courseTitle = document.getElementById('adminCourseTitle').value;
+        const courseDescription = document.getElementById('adminCourseDescription').value;
+
+        try {
+            const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
+            const coursesRef = collection(db, coursesCollectionPath);
+            await addDoc(coursesRef, {
+                title: courseTitle,
+                description: courseDescription,
+                authorId: user.uid,
+                authorEmail: user.email,
+                createdAt: serverTimestamp()
+            });
+
+            showMessage('Course created successfully!');
+            document.getElementById('createCourseForm').reset();
+        } catch (error) {
+            console.error("Error adding document:", error);
+            showMessage('Failed to create course. Please try again.', 'error');
+        }
+    }
+
+    // Handle admin adding a new user (Admin only)
+    async function handleAddUser(event) {
+        event.preventDefault();
+        if (userRole !== 'admin') {
+            showMessage('You must be an admin to add users.', 'error');
+            return;
+        }
+
+        const email = document.getElementById('studentEmail').value;
+        try {
+            // To grant a user access, we'll create a user document in Firestore.
+            // This Firestore document serves as an access list.
+            const newUserDocRef = doc(db, `/artifacts/${appId}/users/${btoa(email).replace(/=/g, '')}`);
+            await setDoc(newUserDocRef, {
+                email: email,
+                role: 'student',
+                createdAt: serverTimestamp(),
+                accessGrantedBy: user.email
+            });
+            showMessage(`Access granted for ${email}. They can now create an account via the login screen.`, 'success');
+            document.getElementById('addUserForm').reset();
+        } catch (error) {
+            console.error("Error adding user:", error);
+            showMessage('Failed to add user: ' + error.message, 'error');
+        }
+    }
+
     // --- Media Library Functions ---
     async function handleMediaUpload() {
         if (userRole !== 'admin' || !user) {
@@ -407,7 +464,7 @@
             showMessage('Please select a file to upload.', 'error');
             return;
         }
-        
+
         // The file path in storage: media/{user.uid}/{fileName}
         const mediaRef = ref(storage, `media/${user.uid}/${file.name}`);
         try {
@@ -420,7 +477,7 @@
             showMessage('File upload failed: ' + error.message, 'error');
         }
     }
-    
+
     async function fetchMediaFiles() {
         if (!storage) return;
 
@@ -468,7 +525,7 @@
             showMessage('Failed to load media files.', 'error');
         }
     }
-    
+
     async function handleDeleteFile(fileName) {
         const fileRef = ref(storage, `media/${user.uid}/${fileName}`);
         try {
