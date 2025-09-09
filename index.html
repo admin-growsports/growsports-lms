@@ -1,227 +1,879 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Growsports LMS — Upgraded</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <style>
-    body { font-family: system-ui, sans-serif; transition: background .3s, color .3s; }
-    .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,0.05); }
-    .dark .glass { background: rgba(0,0,0,0.3); }
-    .grid-autofill { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 1rem; }
-    .toast-enter { animation: toast-in .25s ease both; }
-    @keyframes toast-in { from {opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Growsports LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: light;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1a1a1a;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 10% auto;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            animation: fadeIn 0.3s ease-in-out;
+            color: #1a1a1a;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message-box {
+            transition: transform 0.5s ease-in-out;
+            top: 24px;
+            right: 24px;
+            max-width: 300px;
+        }
+        .tab-button.active {
+            background-color: #2e7d32;
+            color: #ffffff;
+        }
+    </style>
 </head>
-<body class="dark bg-gray-950 text-gray-100">
+<body class="bg-white text-gray-900 min-h-screen">
 
-<!-- Sidebar -->
-<aside class="fixed inset-y-0 left-0 w-72 bg-gray-900 glass border-r border-white/10 p-4 z-40">
-  <h1 class="text-xl font-bold mb-6">📘 Growsports LMS</h1>
-  <nav class="space-y-2">
-    <button data-route="dashboard" class="navlink w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">🏠 Dashboard</button>
-    <button data-route="catalog" class="navlink w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">📚 Catalog</button>
-    <button data-route="media" class="navlink w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">🗂 Media Library</button>
-    <button data-route="admin" class="navlink admin-only hidden w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">🛠 Admin Panel</button>
-  </nav>
-  <div class="mt-6 border-t border-white/10 pt-4">
-    <div id="userBlock" class="flex items-center gap-3 mb-3">
-      <img id="userPhoto" class="w-10 h-10 rounded-full border border-white/10" src="" alt="">
-      <div>
-        <div id="userName" class="font-medium">Guest</div>
-        <div id="userEmail" class="text-xs text-gray-400">guest@example.com</div>
-      </div>
+<!-- Header -->
+<header class="bg-white shadow-lg w-full p-4 flex justify-between items-center fixed top-0 z-50">
+    <div class="flex items-center space-x-2">
+        <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.835 5.485 9.208 5 7.5 5S4.165 5.485 3 6.253v13C4.165 18.515 5.835 19 7.5 19s3.335-.485 4.5-1.247m0-13C13.165 5.485 14.835 5 16.5 5s3.335.485 4.5 1.247v13C19.835 18.515 18.165 19 16.5 19s-3.335-.485-4.5-1.247m0 0V5" />
+        </svg>
+        <h1 class="text-2xl font-bold text-gray-800">Growsports LMS</h1>
     </div>
-    <button id="authButton" class="w-full bg-emerald-600 hover:bg-emerald-700 px-3 py-2 rounded-lg">Log In</button>
-    <button id="logoutButton" class="hidden w-full bg-rose-600 hover:bg-rose-700 px-3 py-2 rounded-lg mt-2">Log Out</button>
-  </div>
-</aside>
+    <div class="flex items-center space-x-4">
+        <span id="userIdDisplay" class="text-sm text-gray-500 font-mono hidden sm:block"></span>
+        <button id="authButton" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300 shadow-lg">
+            Log In
+        </button>
+        <button id="logoutButton" class="bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700 transition duration-300 shadow-lg hidden">
+            Log Out
+        </button>
+    </div>
+</header>
 
-<!-- Main -->
-<div class="ml-72 p-6 space-y-8">
-  <header class="flex justify-between items-center">
-    <h2 id="breadcrumb" class="text-xl font-bold">Dashboard</h2>
-    <button id="themeToggle" class="px-3 py-2 rounded-lg bg-white/10">🌙</button>
-  </header>
+<main id="mainContent" class="container mx-auto p-4 pt-20 sm:pt-24 hidden">
+    <!-- Message Box for Alerts and Success Messages -->
+    <div id="messageBox" class="message-box hidden fixed right-6 p-4 rounded-md shadow-lg z-50 transform-gpu translate-x-full" role="alert">
+        <p id="messageText" class="font-medium"></p>
+    </div>
 
-  <!-- Dashboard -->
-  <section id="page-dashboard">
-    <h3 class="text-lg font-semibold mb-2">Enrolled Courses</h3>
-    <div id="enrolledCourses" class="grid-autofill"></div>
-  </section>
+    <!-- Admin Navigation Tabs -->
+    <div id="adminTabs" class="flex justify-center space-x-4 mb-6 hidden">
+        <button id="myCoursesTab" class="tab-button py-2 px-4 rounded-md font-medium text-gray-600 hover:bg-gray-100 focus:bg-gray-200 transition-colors duration-200">My Courses</button>
+        <button id="adminPanelTab" class="tab-button py-2 px-4 rounded-md font-medium text-gray-600 hover:bg-gray-100 focus:bg-gray-200 transition-colors duration-200">Admin Panel</button>
+        <button id="mediaLibraryTab" class="tab-button py-2 px-4 rounded-md font-medium text-gray-600 hover:bg-gray-100 focus:bg-gray-200 transition-colors duration-200">Media Library</button>
+        <button id="studentsTab" class="tab-button py-2 px-4 rounded-md font-medium text-gray-600 hover:bg-gray-100 focus:bg-gray-200 transition-colors duration-200">Student Management</button>
+    </div>
 
-  <!-- Catalog -->
-  <section id="page-catalog" class="hidden">
-    <h3 class="text-lg font-semibold mb-2">Course Catalog</h3>
-    <div id="catalogCourses" class="grid-autofill"></div>
-  </section>
+    <!-- Dashboard Content -->
+    <section id="myCoursesSection" class="bg-white rounded-lg shadow-lg p-6 w-full">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">My Courses</h2>
+            <div class="flex items-center">
+                <span id="courseCount" class="text-sm text-gray-500 mr-2"></span>
+                <svg id="loadingIndicator" class="animate-spin h-6 w-6 text-green-500 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        </div>
+        <div id="coursesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Course cards will be rendered here -->
+        </div>
+        <div id="noCourses" class="text-center py-12 text-gray-500 hidden">
+            <p>No courses found. Check back later!</p>
+        </div>
+    </section>
 
-  <!-- Media Library -->
-  <section id="page-media" class="hidden">
-    <h3 class="text-lg font-semibold mb-2">Upload Media</h3>
-    <input type="file" id="mediaUpload" class="mb-3"/>
-    <progress id="uploadProgress" value="0" max="100" class="w-full mb-3"></progress>
-    <div id="mediaList" class="grid-autofill"></div>
-  </section>
+    <!-- Admin Panel Section -->
+    <section id="adminPanelSection" class="bg-white rounded-lg shadow-lg p-6 w-full hidden">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4">Admin Panel</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Create Course Form -->
+            <div class="bg-gray-100 p-6 rounded-lg shadow-inner">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Create a New Course</h3>
+                <form id="createCourseForm" class="space-y-4">
+                    <div>
+                        <label for="adminCourseTitle" class="block text-sm font-medium text-gray-700">Course Title</label>
+                        <input type="text" id="adminCourseTitle" name="courseTitle" required class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="adminCourseDescription" class="block text-sm font-medium text-gray-700">Course Description</label>
+                        <textarea id="adminCourseDescription" name="courseDescription" rows="4" required class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label for="courseImageUrl" class="block text-sm font-medium text-gray-700">Image URL</label>
+                        <input type="text" id="courseImageUrl" name="courseImageUrl" class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300">
+                            Save Course
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Add User Form -->
+            <div class="bg-gray-100 p-6 rounded-lg shadow-inner">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Add Student by Email</h3>
+                <form id="addUserForm" class="space-y-4">
+                    <div>
+                        <label for="studentEmail" class="block text-sm font-medium text-gray-700">Student Email</label>
+                        <input type="email" id="studentEmail" name="studentEmail" required class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300">
+                            Grant Access
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Manage Courses -->
+        <div class="mt-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Manage Courses</h3>
+            <div id="manageCoursesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Courses to manage will be populated here -->
+            </div>
+        </div>
+    </section>
+    
+    <!-- Media Library Section -->
+    <section id="mediaLibrarySection" class="bg-white rounded-lg shadow-lg p-6 w-full hidden">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4">Media Library</h2>
+        <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+            <input type="file" id="mediaFile" class="mb-2 sm:mb-0 block w-full sm:w-auto text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-600 file:text-white hover:file:bg-green-700">
+            <button id="uploadMediaButton" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300 w-full sm:w-auto">
+                Upload File
+            </button>
+        </div>
+        <div id="mediaFilesList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Media files will be rendered here -->
+        </div>
+        <div id="noMediaFiles" class="text-center py-12 text-gray-500 hidden">
+            <p>No files uploaded yet.</p>
+        </div>
+    </section>
 
-  <!-- Admin -->
-  <section id="page-admin" class="hidden">
-    <h3 class="text-lg font-semibold mb-2">Add Course</h3>
-    <input id="courseTitle" placeholder="Title" class="w-full mb-2 p-2 rounded text-black"/>
-    <textarea id="courseDesc" placeholder="Description" class="w-full mb-2 p-2 rounded text-black"></textarea>
-    <input id="courseThumb" placeholder="Thumbnail URL" class="w-full mb-2 p-2 rounded text-black"/>
-    <input id="courseVideo" placeholder="Video URL (YouTube/Vimeo/Drive)" class="w-full mb-2 p-2 rounded text-black"/>
-    <button id="addCourse" class="bg-emerald-600 px-3 py-2 rounded-lg">Add Course</button>
-  </section>
+    <!-- Students Section -->
+    <section id="studentsSection" class="bg-white rounded-lg shadow-lg p-6 w-full hidden">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4">Student Management</h2>
+        <p class="text-gray-600 mb-4">View and manage all registered students.</p>
+        <div id="studentsList" class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            UID
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date Added
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody" class="divide-y divide-gray-200">
+                    <!-- Student rows will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+    <div class="modal-content !max-w-md">
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-800">Log In to Growsports</h3>
+            <span class="close-modal text-gray-500 hover:text-gray-700 text-2xl cursor-pointer font-bold">&times;</span>
+        </div>
+        <form id="loginForm" class="space-y-4 mt-4">
+            <div>
+                <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="loginEmail" name="email" required class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="loginPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="loginPassword" name="password" required class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300">
+                    Log In
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
-<!-- Toasts -->
-<div id="toasts" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+<!-- Course Content Modal -->
+<div id="courseContentModal" class="modal">
+    <div class="modal-content !max-w-4xl">
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+            <h3 id="modalCourseTitle" class="text-xl font-semibold text-gray-800"></h3>
+            <span class="close-modal text-gray-500 hover:text-gray-700 text-2xl cursor-pointer font-bold">&times;</span>
+        </div>
+        <div class="mt-4">
+            <p id="modalCourseDescription" class="text-gray-600 mb-4"></p>
+            <div id="courseImage" class="w-full h-48 bg-gray-200 rounded-lg mb-4 hidden"></div>
+            
+            <div id="lessonsContainer" class="space-y-6">
+                <!-- Lessons will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Add/Edit Module Modal -->
+<div id="moduleModal" class="modal">
+    <div class="modal-content !max-w-2xl">
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-800">Add New Module</h3>
+            <span class="close-modal text-gray-500 hover:text-gray-700 text-2xl cursor-pointer font-bold">&times;</span>
+        </div>
+        <form id="moduleForm" class="space-y-4 mt-4">
+            <input type="hidden" id="modalCourseId">
+            <input type="hidden" id="modalModuleId">
+            <div>
+                <label for="moduleTitle" class="block text-sm font-medium text-gray-700">Module Title</label>
+                <input type="text" id="moduleTitle" required class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="moduleSubject" class="block text-sm font-medium text-gray-700">Subject</label>
+                <input type="text" id="moduleSubject" required class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="moduleVideoUrl" class="block text-sm font-medium text-gray-700">Video URL (YouTube/Vimeo/Direct MP4)</label>
+                <input type="text" id="moduleVideoUrl" class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="moduleNotes" class="block text-sm font-medium text-gray-700">Notes (link)</label>
+                <input type="text" id="moduleNotes" class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="moduleAssignment" class="block text-sm font-medium text-gray-700">Assignment (link)</label>
+                <input type="text" id="moduleAssignment" class="mt-1 block w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm p-2 focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button type="button" id="deleteModuleButton" class="bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700 transition duration-300 hidden">
+                    Delete Module
+                </button>
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300">
+                    Save Module
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Firebase SDKs -->
 <script type="module">
-  // --- Firebase Config ---
-  const firebaseConfig = {
-    apiKey: "YOUR_KEY",
-    authDomain: "YOUR_APP.firebaseapp.com",
-    projectId: "YOUR_APP",
-    storageBucket: "YOUR_APP.appspot.com",
-    messagingSenderId: "XXXX",
-    appId: "XXXX"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const storage = firebase.storage();
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, serverTimestamp, setDoc, getDocs, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, listAll, deleteObject, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  // --- Elements ---
-  const pages = {
-    dashboard: document.getElementById("page-dashboard"),
-    catalog: document.getElementById("page-catalog"),
-    media: document.getElementById("page-media"),
-    admin: document.getElementById("page-admin")
-  };
-  const breadcrumb = document.getElementById("breadcrumb");
-  const authBtn = document.getElementById("authButton");
-  const logoutBtn = document.getElementById("logoutButton");
-  const userName = document.getElementById("userName");
-  const userEmail = document.getElementById("userEmail");
-  const userPhoto = document.getElementById("userPhoto");
-
-  // --- Navigation ---
-  document.querySelectorAll(".navlink").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      const route=btn.dataset.route;
-      breadcrumb.textContent=btn.textContent.trim();
-      Object.values(pages).forEach(p=>p.classList.add("hidden"));
-      pages[route].classList.remove("hidden");
-    });
-  });
-
-  // --- Auth ---
-  authBtn.onclick=()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-  logoutBtn.onclick=()=>auth.signOut();
-
-  auth.onAuthStateChanged(user=>{
-    if(user){
-      authBtn.classList.add("hidden");
-      logoutBtn.classList.remove("hidden");
-      userName.textContent=user.displayName||"Student";
-      userEmail.textContent=user.email;
-      userPhoto.src=user.photoURL||`https://ui-avatars.com/api/?name=${user.email[0]}`;
-      loadCatalog();
-      loadEnrolled(user.uid);
-    }else{
-      authBtn.classList.remove("hidden");
-      logoutBtn.classList.add("hidden");
-      userName.textContent="Guest";
-      userEmail.textContent="guest@example.com";
-      userPhoto.src="";
-    }
-  });
-
-  // --- Catalog ---
-  function loadCatalog(){
-    db.collection("courses").onSnapshot(snap=>{
-      let html="";
-      snap.forEach(doc=>{
-        const c=doc.data();
-        html+=`
-        <div class="glass p-4 rounded-xl">
-          <img src="${c.thumbnail}" class="w-full h-40 object-cover rounded mb-2"/>
-          <h4 class="font-semibold">${c.title}</h4>
-          <p class="text-sm text-gray-400">${c.description}</p>
-          <button onclick="enroll('${doc.id}')" class="mt-2 bg-emerald-600 px-3 py-1 rounded">Enroll</button>
-          <button onclick="playCourse('${c.videoUrl}')" class="mt-2 bg-indigo-600 px-3 py-1 rounded">Preview</button>
-        </div>`;
-      });
-      document.getElementById("catalogCourses").innerHTML=html;
-    });
-  }
-
-  // --- Enrollment ---
-  window.enroll=(courseId)=>{
-    const uid=auth.currentUser.uid;
-    db.collection("users").doc(uid).collection("enrollments").doc(courseId).set({date:new Date()});
-    toast("Enrolled ✅");
-  };
-
-  function loadEnrolled(uid){
-    db.collection("users").doc(uid).collection("enrollments").onSnapshot(snap=>{
-      let html="";
-      snap.forEach(doc=>{
-        html+=`<div class="glass p-4 rounded-xl">Course ID: ${doc.id}</div>`;
-      });
-      document.getElementById("enrolledCourses").innerHTML=html||"No enrollments yet";
-    });
-  }
-
-  // --- Media Upload ---
-  document.getElementById("mediaUpload").addEventListener("change",e=>{
-    const file=e.target.files[0];
-    if(!file) return;
-    const ref=storage.ref("media/"+file.name);
-    const task=ref.put(file);
-    task.on("state_changed",s=>{
-      document.getElementById("uploadProgress").value=(s.bytesTransferred/s.totalBytes)*100;
-    },null,()=>toast("Upload complete ✅"));
-  });
-
-  // --- Admin Add Course ---
-  document.getElementById("addCourse").onclick=()=>{
-    const c={
-      title:courseTitle.value,
-      description:courseDesc.value,
-      thumbnail:courseThumb.value,
-      videoUrl:courseVideo.value
+    // Global variables for Firebase configuration
+    const appId = 'growsports-lms';
+    const firebaseConfig = {
+        apiKey: "AIzaSyAk_SOaDtFsQZPx--b0kBvCu0ZguyuApzs",
+        authDomain: "growsports-lms.firebaseapp.com",
+        projectId: "growsports-lms",
+        storageBucket: "growsports-lms.firebasestorage.app",
+        messagingSenderId: "981110350315",
+        appId: "1:981110350315:web:726d39a024635152c879ae",
+        measurementId: "G-CP6FSQ2P9B"
     };
-    db.collection("courses").add(c).then(()=>toast("Course added ✅"));
-  };
 
-  // --- Video Player ---
-  window.playCourse=(url)=>{
-    let embed="";
-    if(url.includes("youtube")) embed=`<iframe class="w-full h-64" src="${url.replace("watch?v=","embed/")}" allowfullscreen></iframe>`;
-    else if(url.includes("vimeo")) embed=`<iframe class="w-full h-64" src="https://player.vimeo.com/video/${url.split("/").pop()}" allowfullscreen></iframe>`;
-    else embed=`<video controls class="w-full h-64"><source src="${url}"></video>`;
-    toast(embed,true);
-  };
+    let db, auth, storage;
+    let user, userRole;
+    let unsubscribeStudents = null;
 
-  // --- Theme Toggle ---
-  document.getElementById("themeToggle").onclick=()=>document.body.classList.toggle("dark");
+    setLogLevel('Debug');
 
-  // --- Toast ---
-  function toast(msg,raw=false){
-    const div=document.createElement("div");
-    div.className="toast-enter glass p-3 rounded";
-    div.innerHTML=raw?msg:`<div>${msg}</div>`;
-    document.getElementById("toasts").appendChild(div);
-    setTimeout(()=>div.remove(),4000);
-  }
+    // Function to display messages in the UI
+    function showMessage(message, type = 'success') {
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+        messageText.textContent = message;
+        messageBox.className = `message-box fixed right-6 p-4 rounded-md shadow-lg z-50 transform-gpu`;
+
+        if (type === 'success') {
+            messageBox.classList.add('bg-green-500', 'text-white');
+        } else if (type === 'error') {
+            messageBox.classList.add('bg-red-500', 'text-white');
+        }
+
+        // Animate the message box in
+        requestAnimationFrame(() => {
+            messageBox.classList.remove('translate-x-full');
+            messageBox.classList.add('translate-x-0');
+        });
+
+        // Hide the message box after a few seconds
+        setTimeout(() => {
+            messageBox.classList.remove('translate-x-0');
+            messageBox.classList.add('translate-x-full');
+        }, 3000);
+    }
+
+    // Initialize Firebase
+    async function initializeFirebase() {
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            storage = getStorage(app);
+
+            onAuthStateChanged(auth, async (authUser) => {
+                if (authUser) {
+                    user = authUser;
+                    document.getElementById('userIdDisplay').textContent = `User ID: ${user.uid}`;
+                    document.getElementById('userIdDisplay').classList.remove('hidden');
+                    document.getElementById('authButton').classList.add('hidden');
+                    document.getElementById('logoutButton').classList.remove('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+
+                    // Check user role from Firestore
+                    const userDocRef = doc(db, `/artifacts/${appId}/users/${user.uid}`);
+                    const userDoc = await getDoc(userDocRef);
+                    userRole = userDoc.exists() ? userDoc.data().role : 'student';
+
+                    // Show admin tabs if the user is an admin
+                    if (userRole === 'admin') {
+                        document.getElementById('adminTabs').classList.remove('hidden');
+                        document.getElementById('adminPanelTab').click();
+                    } else {
+                        document.getElementById('adminTabs').classList.add('hidden');
+                        document.getElementById('myCoursesTab').click();
+                    }
+
+                    setupRealtimeListener();
+                    showMessage(`Welcome back, ${user.email}!`, 'success');
+                } else {
+                    user = null;
+                    userRole = null;
+                    document.getElementById('userIdDisplay').classList.add('hidden');
+                    document.getElementById('authButton').classList.remove('hidden');
+                    document.getElementById('logoutButton').classList.add('hidden');
+                    document.getElementById('mainContent').classList.add('hidden');
+                    document.getElementById('loginModal').style.display = 'block';
+                }
+            });
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            showMessage('Failed to connect to the database. Please try again.', 'error');
+        }
+    }
+
+    // Function to set up the real-time listener for courses
+    function setupRealtimeListener() {
+        if (!db) return;
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        loadingIndicator.classList.remove('hidden');
+
+        // Listen to the public courses collection
+        const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
+        const coursesRef = collection(db, coursesCollectionPath);
+
+        onSnapshot(coursesRef, (snapshot) => {
+            const coursesList = document.getElementById('coursesList');
+            const noCoursesMessage = document.getElementById('noCourses');
+            const courseCount = document.getElementById('courseCount');
+            coursesList.innerHTML = '';
+            loadingIndicator.classList.add('hidden');
+
+            if (snapshot.empty) {
+                noCoursesMessage.classList.remove('hidden');
+                courseCount.textContent = `0 courses`;
+            } else {
+                noCoursesMessage.classList.add('hidden');
+                courseCount.textContent = `${snapshot.size} courses`;
+                snapshot.forEach(doc => {
+                    const course = doc.data();
+                    const courseId = doc.id;
+                    const card = document.createElement('div');
+                    card.className = "bg-gray-100 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer";
+                    card.setAttribute('data-course-id', courseId);
+                    
+                    const courseImage = course.imageUrl ? `<img src="${course.imageUrl}" alt="${course.title}" class="w-full h-40 object-cover rounded-md mb-4">` : '';
+
+                    // Placeholder for course completion percentage
+                    const completionPercentage = "0%";
+                    const completionBar = `<div class="w-full bg-gray-300 rounded-full h-2.5 mb-2">
+                                             <div class="bg-green-600 h-2.5 rounded-full" style="width: ${completionPercentage}"></div>
+                                          </div>
+                                          <p class="text-xs text-gray-500 mb-4">${completionPercentage} Complete</p>`;
+
+                    card.innerHTML = `
+                        ${courseImage}
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">${course.title}</h3>
+                        <p class="text-gray-600 text-sm mb-4">${course.description}</p>
+                        ${completionBar}
+                        <div class="flex justify-between items-center text-xs text-gray-500 mt-4 border-t border-gray-200 pt-4">
+                            <span>Created by: ${course.authorEmail || 'N/A'}</span>
+                            <span>${course.createdAt ? new Date(course.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                    `;
+                    coursesList.appendChild(card);
+                });
+            }
+        }, (error) => {
+            console.error("Error listening to courses:", error);
+            showMessage('Failed to load courses. Check the console for details.', 'error');
+            loadingIndicator.classList.add('hidden');
+        });
+    }
+
+    // Handle course card click to show content modal
+    document.getElementById('coursesList').addEventListener('click', async (event) => {
+        const card = event.target.closest('[data-course-id]');
+        if (!card) return;
+
+        const courseId = card.getAttribute('data-course-id');
+        const courseDocRef = doc(db, `/artifacts/${appId}/public/data/courses/${courseId}`);
+        const courseDoc = await getDoc(courseDocRef);
+
+        if (!courseDoc.exists()) {
+            showMessage('Course not found.', 'error');
+            return;
+        }
+
+        const courseData = courseDoc.data();
+        const courseContentModal = document.getElementById('courseContentModal');
+        document.getElementById('modalCourseTitle').textContent = courseData.title;
+        document.getElementById('modalCourseDescription').textContent = courseData.description;
+
+        const courseImage = document.getElementById('courseImage');
+        if (courseData.imageUrl) {
+            courseImage.style.backgroundImage = `url('${courseData.imageUrl}')`;
+            courseImage.style.backgroundSize = 'cover';
+            courseImage.style.backgroundPosition = 'center';
+            courseImage.classList.remove('hidden');
+        } else {
+            courseImage.classList.add('hidden');
+        }
+        
+        // Fetch and display lessons for this course
+        const lessonsContainer = document.getElementById('lessonsContainer');
+        lessonsContainer.innerHTML = 'Loading lessons...';
+        
+        const lessonsRef = collection(db, `/artifacts/${appId}/public/data/courses/${courseId}/lessons`);
+        onSnapshot(lessonsRef, (snapshot) => {
+            lessonsContainer.innerHTML = '';
+            if (snapshot.empty) {
+                lessonsContainer.innerHTML = '<p class="text-gray-500 text-center">No lessons found for this course.</p>';
+                return;
+            }
+            snapshot.forEach(lessonDoc => {
+                const lessonData = lessonDoc.data();
+                let videoEmbed = '';
+                if (lessonData.videoUrl) {
+                    let videoId = '';
+                    let embedUrl = '';
+                    if (lessonData.videoUrl.includes('youtube.com')) {
+                        const urlParams = new URLSearchParams(new URL(lessonData.videoUrl).search);
+                        videoId = urlParams.get('v');
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                    } else if (lessonData.videoUrl.includes('vimeo.com')) {
+                        videoId = lessonData.videoUrl.split('/').pop();
+                        embedUrl = `https://player.vimeo.com/video/${videoId}`;
+                    } else if (lessonData.videoUrl.includes('drive.google.com')) {
+                        // Google Drive video link processing (needs to be public)
+                        const urlParams = new URLSearchParams(new URL(lessonData.videoUrl).search);
+                        videoId = urlParams.get('id');
+                        embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
+                    }
+
+                    if (embedUrl) {
+                        videoEmbed = `<div class="relative pt-[56.25%] mb-4">
+                                        <iframe class="absolute top-0 left-0 w-full h-full rounded-lg" src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                    </div>`;
+                    }
+                }
+                
+                const notesLink = lessonData.notesUrl ? `<a href="${lessonData.notesUrl}" target="_blank" class="text-green-600 hover:text-green-800 transition">View Notes</a>` : '';
+                const assignmentLink = lessonData.assignmentUrl ? `<a href="${lessonData.assignmentUrl}" target="_blank" class="text-green-600 hover:text-green-800 transition">View Assignment</a>` : '';
+                const certificateLink = lessonData.certificateUrl ? `<a href="${lessonData.certificateUrl}" target="_blank" class="text-green-600 hover:text-green-800 transition">View Certificate</a>` : '';
+
+                const lessonDiv = document.createElement('div');
+                lessonDiv.className = "bg-gray-100 p-4 rounded-lg";
+                lessonDiv.innerHTML = `
+                    <h4 class="text-md font-semibold text-gray-800">${lessonData.subject} - ${lessonData.title}</h4>
+                    <p class="text-gray-600 text-sm mb-2">${lessonData.topic || ''}</p>
+                    ${videoEmbed}
+                    <div class="flex space-x-4 text-sm mt-4">
+                        ${notesLink}
+                        ${assignmentLink}
+                        ${certificateLink}
+                    </div>
+                `;
+                lessonsContainer.appendChild(lessonDiv);
+            });
+        });
+
+        courseContentModal.style.display = 'block';
+    });
+
+    // Handle login form submission
+    async function handleLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            document.getElementById('loginModal').style.display = 'none';
+            showMessage('Login successful!', 'success');
+        } catch (error) {
+            console.error("Login error:", error);
+            showMessage('Login failed: ' + error.message, 'error');
+        }
+    }
+
+    // Handle logout
+    async function handleLogout() {
+        try {
+            await signOut(auth);
+            showMessage('You have been logged out.', 'success');
+        } catch (error) {
+            console.error("Logout error:", error);
+            showMessage('Logout failed: ' + error.message, 'error');
+        }
+    }
+
+    // Handle form submission to create a new course (Admin only)
+    async function handleCreateCourse(event) {
+        event.preventDefault();
+        if (userRole !== 'admin') {
+            showMessage('You must be an admin to create courses.', 'error');
+            return;
+        }
+
+        const courseTitle = document.getElementById('adminCourseTitle').value;
+        const courseDescription = document.getElementById('adminCourseDescription').value;
+        const courseImageUrl = document.getElementById('courseImageUrl').value;
+
+        try {
+            const coursesCollectionPath = `/artifacts/${appId}/public/data/courses`;
+            const coursesRef = collection(db, coursesCollectionPath);
+            await addDoc(coursesRef, {
+                title: courseTitle,
+                description: courseDescription,
+                imageUrl: courseImageUrl,
+                authorId: user.uid,
+                authorEmail: user.email,
+                createdAt: serverTimestamp()
+            });
+
+            showMessage('Course created successfully!', 'success');
+            document.getElementById('createCourseForm').reset();
+        } catch (error) {
+            console.error("Error adding document:", error);
+            showMessage('Failed to create course. Please try again.', 'error');
+        }
+    }
+
+    // Handle admin adding a new user (Admin only)
+    async function handleAddUser(event) {
+        event.preventDefault();
+        if (userRole !== 'admin') {
+            showMessage('You must be an admin to add users.', 'error');
+            return;
+        }
+
+        const email = document.getElementById('studentEmail').value;
+        try {
+            // To grant a user access, we'll create a user document in Firestore.
+            // This Firestore document serves as an access list.
+            const newUserDocRef = doc(db, `/artifacts/${appId}/users/${btoa(email).replace(/=/g, '')}`);
+            await setDoc(newUserDocRef, {
+                email: email,
+                role: 'student',
+                createdAt: serverTimestamp(),
+                accessGrantedBy: user.email
+            });
+            showMessage(`Access granted for ${email}. They can now create an account via the login screen.`, 'success');
+            document.getElementById('addUserForm').reset();
+        } catch (error) {
+            console.error("Error adding user:", error);
+            showMessage('Failed to add user: ' + error.message, 'error');
+        }
+    }
+
+    // --- Student Management Functions ---
+    async function fetchStudents() {
+        const studentsTableBody = document.getElementById('studentTableBody');
+        studentsTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">Loading students...</td></tr>';
+        
+        if (unsubscribeStudents) {
+            unsubscribeStudents();
+        }
+
+        const usersCollectionPath = `/artifacts/${appId}/users`;
+        const usersRef = collection(db, usersCollectionPath);
+        
+        unsubscribeStudents = onSnapshot(usersRef, (snapshot) => {
+            studentsTableBody.innerHTML = '';
+            if (snapshot.empty) {
+                studentsTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">No students found.</td></tr>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const userData = doc.data();
+                if (userData.role === 'student') {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-gray-100 transition-colors duration-200";
+                    
+                    const userId = doc.id;
+                    const dateAdded = userData.createdAt ? new Date(userData.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${userData.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${userId.substring(0, 10)}...</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${dateAdded}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                            <button class="text-red-600 hover:text-red-900 ml-4 delete-student" data-user-id="${doc.id}">Delete</button>
+                        </td>
+                    `;
+                    studentsTableBody.appendChild(row);
+                }
+            });
+
+            // Add listener for delete buttons
+            studentsTableBody.querySelectorAll('.delete-student').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const studentId = e.target.dataset.userId;
+                    if (confirm('Are you sure you want to delete this student?')) {
+                        try {
+                            const studentDocRef = doc(db, `/artifacts/${appId}/users/${studentId}`);
+                            await deleteDoc(studentDocRef);
+                            showMessage('Student deleted successfully!', 'success');
+                        } catch (error) {
+                            console.error("Error deleting student:", error);
+                            showMessage('Failed to delete student.', 'error');
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    // --- Media Library Functions ---
+    async function handleMediaUpload() {
+        if (userRole !== 'admin' || !user) {
+            showMessage('You must be an admin to upload media.', 'error');
+            return;
+        }
+
+        const fileInput = document.getElementById('mediaFile');
+        const file = fileInput.files[0];
+        if (!file) {
+            showMessage('Please select a file to upload.', 'error');
+            return;
+        }
+
+        const mediaRef = ref(storage, `media/${user.uid}/${file.name}`);
+        try {
+            await uploadBytes(mediaRef, file);
+            showMessage('File uploaded successfully!', 'success');
+            fileInput.value = '';
+            fetchMediaFiles();
+        } catch (error) {
+            console.error("Upload error:", error);
+            showMessage('File upload failed: ' + error.message, 'error');
+        }
+    }
+
+    async function fetchMediaFiles() {
+        if (!storage || !user) return;
+
+        const mediaFilesList = document.getElementById('mediaFilesList');
+        const noMediaFilesMessage = document.getElementById('noMediaFiles');
+        mediaFilesList.innerHTML = '';
+        
+        const listRef = ref(storage, `media/${user.uid}`);
+        try {
+            const res = await listAll(listRef);
+            if (res.items.length === 0) {
+                noMediaFilesMessage.classList.remove('hidden');
+            } else {
+                noMediaFilesMessage.classList.add('hidden');
+                for (const itemRef of res.items) {
+                    const fileContainer = document.createElement('div');
+                    fileContainer.className = "bg-gray-100 p-4 rounded-md flex items-center justify-between space-x-2";
+                    
+                    const fileName = itemRef.name;
+                    
+                    const fileIcon = fileName.match(/\.(mp4|mov|avi|webm)$/i) ? 
+                        `<svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.724v6.552a1 1 0 01-1.447.894L15 14M5 18H3a2 2 0 01-2-2V8a2 2 0 012-2h3.93l3.57-2.148a1 1 0 011.45.894v11.5a1 1 0 01-1.45.894L9.93 18H5z"/> </svg>` : 
+                        `<svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/> </svg>`;
+
+                    fileContainer.innerHTML = `
+                        <div class="flex items-center space-x-2 truncate">
+                            ${fileIcon}
+                            <span class="truncate text-gray-900">${fileName}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="#" class="download-link text-sm text-green-600 hover:text-green-800" data-name="${fileName}">Download</a>
+                            <button class="delete-file-btn text-red-600 hover:text-red-800 transition-colors duration-200" data-name="${fileName}">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    mediaFilesList.appendChild(fileContainer);
+                }
+            }
+        } catch (error) {
+            console.error("Error listing files:", error);
+            showMessage('Failed to load media files.', 'error');
+        }
+    }
+
+    async function handleDeleteFile(fileName) {
+        if (!confirm(`Are you sure you want to delete "${fileName}"?`)) return;
+
+        const fileRef = ref(storage, `media/${user.uid}/${fileName}`);
+        try {
+            await deleteObject(fileRef);
+            showMessage(`File "${fileName}" deleted successfully.`, 'success');
+            fetchMediaFiles();
+        } catch (error) {
+            console.error("Error deleting file:", error);
+            showMessage('Failed to delete file: ' + error.message, 'error');
+        }
+    }
+
+    // DOMContentLoaded event listener
+    document.addEventListener('DOMContentLoaded', () => {
+        const loginModal = document.getElementById('loginModal');
+        const loginButton = document.getElementById('authButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const closeModalButton = document.querySelector('.close-modal');
+        const loginForm = document.getElementById('loginForm');
+        const myCoursesTab = document.getElementById('myCoursesTab');
+        const adminPanelTab = document.getElementById('adminPanelTab');
+        const mediaLibraryTab = document.getElementById('mediaLibraryTab');
+        const studentsTab = document.getElementById('studentsTab');
+        const myCoursesSection = document.getElementById('myCoursesSection');
+        const adminPanelSection = document.getElementById('adminPanelSection');
+        const mediaLibrarySection = document.getElementById('mediaLibrarySection');
+        const studentsSection = document.getElementById('studentsSection');
+        const createCourseForm = document.getElementById('createCourseForm');
+        const addUserForm = document.getElementById('addUserForm');
+        const uploadMediaButton = document.getElementById('uploadMediaButton');
+        const mediaFilesList = document.getElementById('mediaFilesList');
+
+        // Show login modal on button click
+        loginButton.addEventListener('click', () => {
+            loginModal.style.display = 'block';
+        });
+
+        // Handle tab clicks for navigation
+        myCoursesTab.addEventListener('click', () => {
+            myCoursesSection.classList.remove('hidden');
+            adminPanelSection.classList.add('hidden');
+            mediaLibrarySection.classList.add('hidden');
+            studentsSection.classList.add('hidden');
+        });
+        adminPanelTab.addEventListener('click', () => {
+            adminPanelSection.classList.remove('hidden');
+            myCoursesSection.classList.add('hidden');
+            mediaLibrarySection.classList.add('hidden');
+            studentsSection.classList.add('hidden');
+        });
+        mediaLibraryTab.addEventListener('click', () => {
+            mediaLibrarySection.classList.remove('hidden');
+            myCoursesSection.classList.add('hidden');
+            adminPanelSection.classList.add('hidden');
+            studentsSection.classList.add('hidden');
+            fetchMediaFiles();
+        });
+        studentsTab.addEventListener('click', () => {
+            studentsSection.classList.remove('hidden');
+            myCoursesSection.classList.add('hidden');
+            adminPanelSection.classList.add('hidden');
+            mediaLibrarySection.classList.add('hidden');
+            fetchStudents();
+        });
+
+        // Handle modal close events
+        closeModalButton.addEventListener('click', () => {
+            loginModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === loginModal) {
+                loginModal.style.display = 'none';
+            }
+        });
+
+        // Handle media files list actions (download and delete)
+        mediaFilesList.addEventListener('click', async (event) => {
+            if (event.target.classList.contains('delete-file-btn')) {
+                const fileName = event.target.dataset.name;
+                handleDeleteFile(fileName);
+            } else if (event.target.classList.contains('download-link')) {
+                event.preventDefault(); // Prevent default link behavior
+                const fileName = event.target.dataset.name;
+                const fileRef = ref(storage, `media/${user.uid}/${fileName}`);
+                try {
+                    const url = await getDownloadURL(fileRef);
+                    window.open(url, '_blank');
+                } catch (error) {
+                    console.error("Download URL error:", error);
+                    showMessage('Failed to get download URL.', 'error');
+                }
+            }
+        });
+
+        // Attach form and button listeners
+        loginForm.addEventListener('submit', handleLogin);
+        logoutButton.addEventListener('click', handleLogout);
+        createCourseForm.addEventListener('submit', handleCreateCourse);
+        addUserForm.addEventListener('submit', handleAddUser);
+        uploadMediaButton.addEventListener('click', handleMediaUpload);
+
+        // Initialize Firebase
+        initializeFirebase();
+    });
 </script>
+
 </body>
 </html>
