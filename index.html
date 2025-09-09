@@ -1,102 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Growsports LMS — Upgraded</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <style>
-    :root { color-scheme: dark; }
-    body { font-family: 'Inter', sans-serif; transition: background-color .3s ease,color .3s ease; }
-    .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,0.04); }
-    .light .glass { background: rgba(0,0,0,0.03); }
-    .elev { box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
-    .animate-fade { animation: fade .25s ease both; }
-    @keyframes fade { from {opacity: 0; transform: translateY(6px)} to {opacity: 1; transform: translateY(0)} }
-    .toast-enter { animation: toast-in .2s ease both; }
-    @keyframes toast-in { from{transform: translateY(8px); opacity:0} to{transform: translateY(0); opacity:1} }
-    .grid-autofill { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
-    .hidden-el { display: none !important; }
+    body { font-family: system-ui, sans-serif; transition: background .3s, color .3s; }
+    .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,0.05); }
+    .dark .glass { background: rgba(0,0,0,0.3); }
+    .grid-autofill { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 1rem; }
+    .toast-enter { animation: toast-in .25s ease both; }
+    @keyframes toast-in { from {opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-[#0b0f1a] via-[#0a0a0a] to-black text-gray-100 dark">
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 max-w-[80vw] bg-[#0f1220]/90 glass border-r border-white/10 p-4 md:translate-x-0 -translate-x-full transition-transform duration-300 z-40">
-    <div class="flex items-center gap-3 px-2 py-2">
-      <svg class="h-9 w-9 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.835 5.485 9.208 5 7.5 5S4.165 5.485 3 6.253v13C4.165 18.515 5.835 19 7.5 19s3.335-.485 4.5-1.247m0-13C13.165 5.485 14.835 5 16.5 5s3.335.485 4.5 1.247v13C19.835 18.515 18.165 19 16.5 19s-3.335-.485-4.5-1.247m0 0V5" />
-      </svg>
+<body class="dark bg-gray-950 text-gray-100">
+
+<!-- Sidebar -->
+<aside class="fixed inset-y-0 left-0 w-72 bg-gray-900 glass border-r border-white/10 p-4 z-40">
+  <h1 class="text-xl font-bold mb-6">📘 Growsports LMS</h1>
+  <nav class="space-y-2">
+    <button data-route="dashboard" class="navlink w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">🏠 Dashboard</button>
+    <button data-route="catalog" class="navlink w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">📚 Catalog</button>
+    <button data-route="media" class="navlink w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">🗂 Media Library</button>
+    <button data-route="admin" class="navlink admin-only hidden w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">🛠 Admin Panel</button>
+  </nav>
+  <div class="mt-6 border-t border-white/10 pt-4">
+    <div id="userBlock" class="flex items-center gap-3 mb-3">
+      <img id="userPhoto" class="w-10 h-10 rounded-full border border-white/10" src="" alt="">
       <div>
-        <h1 class="text-xl font-bold">Growsports LMS</h1>
-        <p class="text-xs text-gray-400">Learn. Track. Grow.</p>
+        <div id="userName" class="font-medium">Guest</div>
+        <div id="userEmail" class="text-xs text-gray-400">guest@example.com</div>
       </div>
     </div>
-
-    <nav class="mt-6 space-y-1">
-      <button data-route="dashboard" class="navlink w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 focus:bg-white/10 transition">
-        <span>🏠</span><span class="font-medium">Dashboard</span>
-      </button>
-      <button data-route="catalog" class="navlink w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 focus:bg-white/10 transition">
-        <span>📚</span><span class="font-medium">Catalog</span>
-      </button>
-      <button data-route="media" class="navlink w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 focus:bg-white/10 transition">
-        <span>🗂️</span><span class="font-medium">Media Library</span>
-      </button>
-      <button data-route="admin" class="navlink admin-only hidden-el w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 focus:bg-white/10 transition">
-        <span>🛠️</span><span class="font-medium">Admin Panel</span>
-      </button>
-    </nav>
-
-    <div class="mt-6 border-t border-white/10 pt-4 space-y-2 text-sm">
-      <div id="userBlock" class="px-3">
-        <div class="text-gray-300" id="userEmail">Guest</div>
-        <div class="text-xs text-gray-500" id="userRole">Role: —</div>
-        <div class="text-xs text-gray-500" id="userIdDisplay"></div>
-      </div>
-      <div class="flex gap-2 px-3">
-        <button id="authButton" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm transition">Log In</button>
-        <button id="logoutButton" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-lg text-sm transition hidden">Log Out</button>
-      </div>
-    </div>
-  </aside>
-
-  <!-- Main Content -->
-  <div class="flex-1 md:ml-72">
-    <header class="sticky top-0 z-30 glass elev border-b border-white/10">
-      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <button id="menuButton" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10">☰</button>
-          <div class="text-sm text-gray-400 hidden sm:block">
-            <span id="breadcrumb">Dashboard</span>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="themeToggle" class="w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center">🌙</button>
-        </div>
-      </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
-      <!-- Pages injected here -->
-      <section id="page-dashboard" class="animate-fade">...</section>
-      <section id="page-catalog" class="hidden animate-fade">...</section>
-      <section id="page-media" class="hidden animate-fade">...</section>
-      <section id="page-admin" class="hidden animate-fade">...</section>
-    </main>
+    <button id="authButton" class="w-full bg-emerald-600 hover:bg-emerald-700 px-3 py-2 rounded-lg">Log In</button>
+    <button id="logoutButton" class="hidden w-full bg-rose-600 hover:bg-rose-700 px-3 py-2 rounded-lg mt-2">Log Out</button>
   </div>
+</aside>
 
-  <!-- Login Modal -->
-  <div id="loginModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">...</div>
+<!-- Main -->
+<div class="ml-72 p-6 space-y-8">
+  <header class="flex justify-between items-center">
+    <h2 id="breadcrumb" class="text-xl font-bold">Dashboard</h2>
+    <button id="themeToggle" class="px-3 py-2 rounded-lg bg-white/10">🌙</button>
+  </header>
 
-  <!-- Toasts -->
-  <div id="toasts" class="fixed bottom-4 right-4 space-y-2 z-[60]"></div>
+  <!-- Dashboard -->
+  <section id="page-dashboard">
+    <h3 class="text-lg font-semibold mb-2">Enrolled Courses</h3>
+    <div id="enrolledCourses" class="grid-autofill"></div>
+  </section>
 
-  <!-- Firebase + App Logic -->
-  <script type="module">
-    // Firebase setup + UI logic from previous version (auth, courses, enrollments, media, admin)
-  </script>
+  <!-- Catalog -->
+  <section id="page-catalog" class="hidden">
+    <h3 class="text-lg font-semibold mb-2">Course Catalog</h3>
+    <div id="catalogCourses" class="grid-autofill"></div>
+  </section>
+
+  <!-- Media Library -->
+  <section id="page-media" class="hidden">
+    <h3 class="text-lg font-semibold mb-2">Upload Media</h3>
+    <input type="file" id="mediaUpload" class="mb-3"/>
+    <progress id="uploadProgress" value="0" max="100" class="w-full mb-3"></progress>
+    <div id="mediaList" class="grid-autofill"></div>
+  </section>
+
+  <!-- Admin -->
+  <section id="page-admin" class="hidden">
+    <h3 class="text-lg font-semibold mb-2">Add Course</h3>
+    <input id="courseTitle" placeholder="Title" class="w-full mb-2 p-2 rounded text-black"/>
+    <textarea id="courseDesc" placeholder="Description" class="w-full mb-2 p-2 rounded text-black"></textarea>
+    <input id="courseThumb" placeholder="Thumbnail URL" class="w-full mb-2 p-2 rounded text-black"/>
+    <input id="courseVideo" placeholder="Video URL (YouTube/Vimeo/Drive)" class="w-full mb-2 p-2 rounded text-black"/>
+    <button id="addCourse" class="bg-emerald-600 px-3 py-2 rounded-lg">Add Course</button>
+  </section>
+</div>
+
+<!-- Toasts -->
+<div id="toasts" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+<script type="module">
+  // --- Firebase Config ---
+  const firebaseConfig = {
+    apiKey: "YOUR_KEY",
+    authDomain: "YOUR_APP.firebaseapp.com",
+    projectId: "YOUR_APP",
+    storageBucket: "YOUR_APP.appspot.com",
+    messagingSenderId: "XXXX",
+    appId: "XXXX"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+
+  // --- Elements ---
+  const pages = {
+    dashboard: document.getElementById("page-dashboard"),
+    catalog: document.getElementById("page-catalog"),
+    media: document.getElementById("page-media"),
+    admin: document.getElementById("page-admin")
+  };
+  const breadcrumb = document.getElementById("breadcrumb");
+  const authBtn = document.getElementById("authButton");
+  const logoutBtn = document.getElementById("logoutButton");
+  const userName = document.getElementById("userName");
+  const userEmail = document.getElementById("userEmail");
+  const userPhoto = document.getElementById("userPhoto");
+
+  // --- Navigation ---
+  document.querySelectorAll(".navlink").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const route=btn.dataset.route;
+      breadcrumb.textContent=btn.textContent.trim();
+      Object.values(pages).forEach(p=>p.classList.add("hidden"));
+      pages[route].classList.remove("hidden");
+    });
+  });
+
+  // --- Auth ---
+  authBtn.onclick=()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  logoutBtn.onclick=()=>auth.signOut();
+
+  auth.onAuthStateChanged(user=>{
+    if(user){
+      authBtn.classList.add("hidden");
+      logoutBtn.classList.remove("hidden");
+      userName.textContent=user.displayName||"Student";
+      userEmail.textContent=user.email;
+      userPhoto.src=user.photoURL||`https://ui-avatars.com/api/?name=${user.email[0]}`;
+      loadCatalog();
+      loadEnrolled(user.uid);
+    }else{
+      authBtn.classList.remove("hidden");
+      logoutBtn.classList.add("hidden");
+      userName.textContent="Guest";
+      userEmail.textContent="guest@example.com";
+      userPhoto.src="";
+    }
+  });
+
+  // --- Catalog ---
+  function loadCatalog(){
+    db.collection("courses").onSnapshot(snap=>{
+      let html="";
+      snap.forEach(doc=>{
+        const c=doc.data();
+        html+=`
+        <div class="glass p-4 rounded-xl">
+          <img src="${c.thumbnail}" class="w-full h-40 object-cover rounded mb-2"/>
+          <h4 class="font-semibold">${c.title}</h4>
+          <p class="text-sm text-gray-400">${c.description}</p>
+          <button onclick="enroll('${doc.id}')" class="mt-2 bg-emerald-600 px-3 py-1 rounded">Enroll</button>
+          <button onclick="playCourse('${c.videoUrl}')" class="mt-2 bg-indigo-600 px-3 py-1 rounded">Preview</button>
+        </div>`;
+      });
+      document.getElementById("catalogCourses").innerHTML=html;
+    });
+  }
+
+  // --- Enrollment ---
+  window.enroll=(courseId)=>{
+    const uid=auth.currentUser.uid;
+    db.collection("users").doc(uid).collection("enrollments").doc(courseId).set({date:new Date()});
+    toast("Enrolled ✅");
+  };
+
+  function loadEnrolled(uid){
+    db.collection("users").doc(uid).collection("enrollments").onSnapshot(snap=>{
+      let html="";
+      snap.forEach(doc=>{
+        html+=`<div class="glass p-4 rounded-xl">Course ID: ${doc.id}</div>`;
+      });
+      document.getElementById("enrolledCourses").innerHTML=html||"No enrollments yet";
+    });
+  }
+
+  // --- Media Upload ---
+  document.getElementById("mediaUpload").addEventListener("change",e=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    const ref=storage.ref("media/"+file.name);
+    const task=ref.put(file);
+    task.on("state_changed",s=>{
+      document.getElementById("uploadProgress").value=(s.bytesTransferred/s.totalBytes)*100;
+    },null,()=>toast("Upload complete ✅"));
+  });
+
+  // --- Admin Add Course ---
+  document.getElementById("addCourse").onclick=()=>{
+    const c={
+      title:courseTitle.value,
+      description:courseDesc.value,
+      thumbnail:courseThumb.value,
+      videoUrl:courseVideo.value
+    };
+    db.collection("courses").add(c).then(()=>toast("Course added ✅"));
+  };
+
+  // --- Video Player ---
+  window.playCourse=(url)=>{
+    let embed="";
+    if(url.includes("youtube")) embed=`<iframe class="w-full h-64" src="${url.replace("watch?v=","embed/")}" allowfullscreen></iframe>`;
+    else if(url.includes("vimeo")) embed=`<iframe class="w-full h-64" src="https://player.vimeo.com/video/${url.split("/").pop()}" allowfullscreen></iframe>`;
+    else embed=`<video controls class="w-full h-64"><source src="${url}"></video>`;
+    toast(embed,true);
+  };
+
+  // --- Theme Toggle ---
+  document.getElementById("themeToggle").onclick=()=>document.body.classList.toggle("dark");
+
+  // --- Toast ---
+  function toast(msg,raw=false){
+    const div=document.createElement("div");
+    div.className="toast-enter glass p-3 rounded";
+    div.innerHTML=raw?msg:`<div>${msg}</div>`;
+    document.getElementById("toasts").appendChild(div);
+    setTimeout(()=>div.remove(),4000);
+  }
+</script>
 </body>
 </html>
